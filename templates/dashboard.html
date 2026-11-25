@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – WomenHealth AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg wh-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('index') }}">
+      <span class="brand-icon"><i class="fas fa-heartbeat"></i></span>
+      WomenHealth <span class="brand-ai">AI</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-1">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('predict') }}"><i class="fas fa-brain me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('records') }}"><i class="fas fa-file-medical me-1"></i>Records</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+        <li class="nav-item ms-2"><span class="user-pill"><i class="fas fa-user-circle me-1"></i>{{ session.get('user_name','') }}</span></li>
+        <li class="nav-item ms-2"><a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Flash -->
+<div class="container mt-3">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm">
+          <i class="fas fa-info-circle me-2"></i>{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<section class="dashboard-section">
+  <div class="container">
+
+    {% if view == 'doctor' %}
+    <!-- ═══ DOCTOR DASHBOARD ═══ -->
+    <div class="dash-welcome" style="background:linear-gradient(135deg,#065f46,#047857);">
+      <div class="row align-items-center">
+        <div class="col">
+          <h3 class="text-white mb-1"><i class="fas fa-user-md me-2"></i>Dr. {{ session.get('user_name') }}</h3>
+          <p class="text-white opacity-75 mb-0">Doctor Panel — Monitor all patient health records and AI results.</p>
+        </div>
+        <div class="col-auto">
+          <span class="badge bg-light text-success px-3 py-2 fw-bold rounded-pill"><i class="fas fa-shield-check me-1"></i>Doctor Access</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Doctor Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">{{ patients|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-users me-1"></i>Total Patients</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">{{ records|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-file-medical me-1"></i>Total Records</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num text-danger">{{ records|selectattr('risk_result','equalto','High Risk')|list|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-exclamation-triangle me-1"></i>High Risk</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num text-success">{{ records|selectattr('risk_result','equalto','Low Risk')|list|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-check-circle me-1"></i>Low Risk</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patients List -->
+    <div class="wh-card p-4 mb-4">
+      <h5 class="mb-3"><i class="fas fa-users me-2 text-success"></i>Registered Patients</h5>
+      {% if patients %}
+      <div class="row g-3">
+        {% for p in patients %}
+        <div class="col-md-4">
+          <div class="wh-card p-3 d-flex align-items-center gap-3" style="border-color:#d1fae5">
+            <div class="wh-card-icon icon-teal mb-0" style="width:44px;height:44px;font-size:1.1rem;"><i class="fas fa-female"></i></div>
+            <div>
+              <div class="fw-bold small">{{ p.name }}</div>
+              <div class="text-muted" style="font-size:.78rem">{{ p.email }}</div>
+              <div class="text-muted" style="font-size:.75rem">Joined: {{ p.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="text-muted text-center py-3">No patients registered yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- All Records Table -->
+    <div class="wh-card p-4">
+      <h5 class="mb-3"><i class="fas fa-database me-2 text-primary"></i>All Patient Health Records</h5>
+      {% if records %}
+      <div class="table-responsive">
+        <table class="table wh-table">
+          <thead>
+            <tr><th>#</th><th>Patient ID</th><th>Date</th><th>Glucose</th><th>BMI</th><th>BP</th><th>Age</th><th>Score</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            {% for r in records %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><span class="badge bg-light text-dark border">Patient #{{ r.user_id }}</span></td>
+              <td>{{ r.created_at.strftime('%d %b %Y') }}</td>
+              <td>{{ r.glucose }}</td>
+              <td>{{ r.bmi }}</td>
+              <td>{{ r.blood_pressure }}</td>
+              <td>{{ r.age }}</td>
+              <td><strong>{{ r.risk_percentage }}%</strong></td>
+              <td>
+                {% if r.risk_result == 'High Risk' %}<span class="badge-risk-high">{{ r.risk_result }}</span>
+                {% elif r.risk_result == 'Moderate Risk' %}<span class="badge-risk-mod">{{ r.risk_result }}</span>
+                {% else %}<span class="badge-risk-low">{{ r.risk_result }}</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted text-center py-4">No patient records yet.</p>
+      {% endif %}
+    </div>
+
+    {% else %}
+    <!-- ═══ PATIENT DASHBOARD ═══ -->
+    <div class="dash-welcome">
+      <div class="row align-items-center">
+        <div class="col">
+          <h3 class="text-white mb-1">Hello, {{ session.get('user_name') }}! 👋</h3>
+          <p class="text-white opacity-75 mb-0">Here's your health overview. Stay healthy, stay empowered.</p>
+        </div>
+        <div class="col-auto">
+          <a href="{{ url_for('predict') }}" class="btn btn-light fw-bold" style="border-radius:50px;color:var(--primary)">
+            <i class="fas fa-plus me-2"></i>New Prediction
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patient Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">{{ records|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-file-medical me-1"></i>Total Records</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num text-danger">{{ records|selectattr('risk_result','equalto','High Risk')|list|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-exclamation-triangle me-1"></i>High Risk</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num text-warning">{{ records|selectattr('risk_result','equalto','Moderate Risk')|list|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-exclamation-circle me-1"></i>Moderate Risk</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num text-success">{{ records|selectattr('risk_result','equalto','Low Risk')|list|length }}</div>
+          <div class="dash-stat-label"><i class="fas fa-check-circle me-1"></i>Low Risk</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Records Table -->
+    <div class="wh-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="fas fa-history me-2 text-primary"></i>Your Health History</h5>
+        <a href="{{ url_for('predict') }}" class="btn btn-sm btn-primary-wh">+ New Test</a>
+      </div>
+      {% if records %}
+      <div class="table-responsive">
+        <table class="table wh-table">
+          <thead>
+            <tr><th>#</th><th>Date</th><th>Glucose</th><th>BMI</th><th>BP</th><th>Age</th><th>Score</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            {% for r in records %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ r.created_at.strftime('%d %b %Y') }}</td>
+              <td>{{ r.glucose }}</td>
+              <td>{{ r.bmi }}</td>
+              <td>{{ r.blood_pressure }}</td>
+              <td>{{ r.age }}</td>
+              <td><strong>{{ r.risk_percentage }}%</strong></td>
+              <td>
+                {% if r.risk_result == 'High Risk' %}<span class="badge-risk-high"><i class="fas fa-exclamation-triangle me-1"></i>{{ r.risk_result }}</span>
+                {% elif r.risk_result == 'Moderate Risk' %}<span class="badge-risk-mod"><i class="fas fa-exclamation-circle me-1"></i>{{ r.risk_result }}</span>
+                {% else %}<span class="badge-risk-low"><i class="fas fa-check-circle me-1"></i>{{ r.risk_result }}</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5">
+        <div class="wh-card-icon icon-purple mx-auto mb-3"><i class="fas fa-file-medical"></i></div>
+        <h6 class="fw-bold">No Records Yet</h6>
+        <p class="text-muted small">Take your first AI health prediction to see results here.</p>
+        <a href="{{ url_for('predict') }}" class="btn btn-primary-wh mt-2">Start Prediction</a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="wh-footer mt-5">
+  <div class="container text-center py-4">
+    <p class="mb-1"><i class="fas fa-heartbeat text-pink me-1"></i> WomenHealth AI — AI-Based Women Health Risk Prediction &amp; Secure Medical Record System</p>
+    <p class="small text-muted mb-0">Built with Python Flask · Scikit-learn · Bootstrap 5</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Prediction – WomenHealth AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg wh-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('index') }}">
+      <span class="brand-icon"><i class="fas fa-heartbeat"></i></span>
+      WomenHealth <span class="brand-ai">AI</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-1">
+        <li class="nav-item"><a class="nav-link active" href="{{ url_for('predict') }}"><i class="fas fa-brain me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('records') }}"><i class="fas fa-file-medical me-1"></i>Records</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+        <li class="nav-item ms-2"><span class="user-pill"><i class="fas fa-user-circle me-1"></i>{{ session.get('user_name','') }}</span></li>
+        <li class="nav-item ms-2"><a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Flash -->
+<div class="container mt-3">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm">
+          <i class="fas fa-info-circle me-2"></i>{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<!-- PREDICT SECTION -->
+<section class="form-section">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="form-section-header mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="wh-card-icon icon-purple mb-0"><i class="fas fa-brain"></i></div>
+        <div>
+          <h3 class="mb-0">AI Health Risk Prediction</h3>
+          <p class="text-muted small mb-0">Enter your health parameters. Our ML model predicts your risk level instantly.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- ── FORM ─────────────────────────────── -->
+      <div class="col-lg-7">
+        <div class="wh-card p-4">
+          <form method="POST" action="{{ url_for('predict') }}">
+            <div class="row g-3">
+
+              <div class="col-12">
+                <h6 class="fw-bold text-muted mb-2"><i class="fas fa-user me-2 text-primary"></i>Personal Information</h6>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Age (years)</label>
+                <input type="number" name="age" class="form-control" min="10" max="100" placeholder="e.g. 35" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Number of Pregnancies</label>
+                <input type="number" name="pregnancies" class="form-control" min="0" max="20" placeholder="e.g. 2" required/>
+              </div>
+
+              <div class="col-12 mt-2">
+                <h6 class="fw-bold text-muted mb-2"><i class="fas fa-heartbeat me-2" style="color:var(--pink)"></i>Health Measurements</h6>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Glucose Level (mg/dL)</label>
+                <input type="number" name="glucose" class="form-control" min="0" max="300" placeholder="e.g. 120" step="0.1" required/>
+                <small class="text-muted">Normal: 70–100 mg/dL</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Blood Pressure (mmHg)</label>
+                <input type="number" name="blood_pressure" class="form-control" min="0" max="200" placeholder="e.g. 80" step="0.1" required/>
+                <small class="text-muted">Normal: 60–80 mmHg</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">BMI (kg/m²)</label>
+                <input type="number" name="bmi" class="form-control" min="10" max="70" placeholder="e.g. 26.5" step="0.1" required/>
+                <small class="text-muted">Normal: 18.5–24.9</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Insulin Level (µU/mL)</label>
+                <input type="number" name="insulin" class="form-control" min="0" max="1000" placeholder="e.g. 80" step="0.1" required/>
+                <small class="text-muted">Normal: 2–25 µU/mL</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Skin Thickness (mm)</label>
+                <input type="number" name="skin_thickness" class="form-control" min="0" max="100" placeholder="e.g. 20" step="0.1" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Diabetes Pedigree Function</label>
+                <input type="number" name="dpf" class="form-control" min="0" max="3" placeholder="e.g. 0.47" step="0.01" required/>
+                <small class="text-muted">Family history factor (0–2.5)</small>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-wh w-100 mt-4">
+              <i class="fas fa-magic me-2"></i>Predict My Health Risk
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── RESULT + INFO ───────────────────── -->
+      <div class="col-lg-5">
+
+        {% if result %}
+        <!-- Result Card -->
+        <div class="risk-result-card {{ result.color }}">
+          <div class="risk-icon">
+            {% if result.color == 'danger' %}<i class="fas fa-exclamation-triangle text-danger"></i>
+            {% elif result.color == 'warning' %}<i class="fas fa-exclamation-circle text-warning"></i>
+            {% else %}<i class="fas fa-check-circle text-success"></i>{% endif %}
+          </div>
+          <h4 class="fw-bold mb-1">{{ result.label }}</h4>
+          <div class="risk-percent">{{ result.percentage }}%</div>
+          <p class="text-muted small mb-2">Risk Score</p>
+          <div class="progress-wh">
+            <div class="progress-bar bg-{{ result.color }}" style="width:{{ result.percentage }}%"></div>
+          </div>
+
+          <!-- Health Tips -->
+          {% if result.tips %}
+          <div class="mt-3 text-start">
+            <p class="fw-bold small mb-2">💡 Health Tips:</p>
+            {% for tip in result.tips %}
+            <div class="small mb-1"><i class="fas fa-arrow-right me-2 text-{{ result.color }}"></i>{{ tip }}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        {% else %}
+        <!-- Placeholder -->
+        <div class="wh-card p-4 text-center mb-3">
+          <div class="wh-card-icon icon-purple mx-auto"><i class="fas fa-chart-bar"></i></div>
+          <h6 class="fw-bold">Your Result Will Appear Here</h6>
+          <p class="text-muted small">Fill the form and click Predict to see your AI-generated risk score.</p>
+        </div>
+        {% endif %}
+
+        <!-- About AI Model -->
+        <div class="wh-card p-4 mt-3">
+          <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>About Our AI Model</h6>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Uses <strong>Random Forest + Logistic Regression</strong></li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Based on <strong>PIMA Indian Diabetes Dataset</strong></li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Analyzes <strong>8 health parameters</strong></li>
+            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Identifies <strong>3 risk levels</strong> in real time</li>
+            <li><i class="fas fa-check text-success me-2"></i>Provides <strong>personalised health tips</strong></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="wh-footer mt-5">
+  <div class="container text-center py-4">
+    <p class="mb-1"><i class="fas fa-heartbeat text-pink me-1"></i> WomenHealth AI — AI-Based Women Health Risk Prediction &amp; Secure Medical Record System</p>
+    <p class="small text-muted mb-0">Built with Python Flask · Scikit-learn · Bootstrap 5</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
